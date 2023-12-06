@@ -25,9 +25,7 @@ fun main() {
     }
 
     fun part1(input: List<String>): Long {
-        val (seeds, mappings) = parseInput(input) { s ->
-            s.substring(6).split(" ").filter { it.isNotEmpty() }.map { it.trim().toLong() }
-        }
+        val (seeds, mappings) = parseInput(input) { parseSeedsSilver(it) }
 
         val locations = seeds.map { seed ->
             mappings.fold(seed) { acc, curr ->
@@ -46,21 +44,16 @@ fun main() {
     fun part2(input: List<String>): Long {
         val (seeds, mappings) = parseInput(input) { parseSeedsGold(it) }
 
-        val l1 = (seeds[0] until seeds[0] + seeds[1]).map { seed ->
-            mappings.fold(seed) { acc, curr ->
-                curr.mapSource(acc)
+        var count = 0L
+        while (true) {
+            val v = mappings.reversed().fold(count) { acc, curr ->
+                curr.mapDestination(acc)
             }
-        }
-
-        val l2 = (seeds[2] until seeds[2] + seeds[3]).map { seed ->
-            mappings.fold(seed) { acc, curr ->
-                curr.mapSource(acc)
+            if ((v >= seeds[0] && v < seeds[0] + seeds[1]) || (v >= seeds[2] && v < seeds[2] + seeds[3])) {
+                return count
             }
+            count++
         }
-
-        val locations = l1 + l2
-
-        return locations.min()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -83,12 +76,26 @@ data class SeedMapper(val ranges: MutableList<SeedRange> = mutableListOf()) {
 
         return destination ?: source
     }
+
+    fun mapDestination(source: Long): Long {
+        val destination = ranges.map { it.mapToSource(source) }.firstOrNull { it != source }
+
+        return destination ?: source
+    }
 }
 
 data class SeedRange(val source: Long, val range: Long, val offset: Long) {
     fun mapToDestination(s: Long): Long {
         return if (s >= source && s <= source + range) {
             s + offset
+        } else {
+            s
+        }
+    }
+
+    fun mapToSource(s: Long): Long {
+        return if (s >= source + offset && s <= source + offset + range) {
+            s - offset
         } else {
             s
         }
