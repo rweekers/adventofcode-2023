@@ -31,6 +31,10 @@ fun main() {
     check(part1(testInput) == 6440)
     check(part2(testInput) == 5905)
 
+    val testInput2 = readInput("Day07_test2")
+    check(part1(testInput2) == 6592)
+    check(part2(testInput2) == 6839)
+
     val input = readInput("Day07")
     part1(input).println()
     part2(input).println()
@@ -66,9 +70,13 @@ data class Hand(val cards: List<CamelCard>, val bid: Int) {
 
         val jokers = cards.filter { it.symbol == "J" }
 
-        val updated = cardGroups.map { it.filter { c -> c.symbol != "J" } }.toMutableList()
+        val updated = cardGroups.asSequence().map { it.filter { c -> c.symbol != "J" } }.toMutableList().filter { it.isNotEmpty() }.sortedByDescending { it.size }.toMutableList()
 
-        updated[0] = updated[0] + jokers
+        if (updated.size > 0) {
+            updated[0] = (updated[0] + jokers)
+        } else {
+            updated.add(jokers)
+        }
 
         return if (updated.size == 1) {
             HandType.FIVE_OF_A_KIND
